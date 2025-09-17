@@ -1,0 +1,49 @@
+name: 'Terraform'
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+jobs:
+  validate:
+    name: 'Validate'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+
+    - name: Terraform Format
+      run: terraform fmt -check -recursive
+
+    - name: Terraform Init - Dev
+      run: terraform init
+      working-directory: ./environments/dev
+      
+    - name: Terraform Validate - Dev
+      run: terraform validate
+      working-directory: ./environments/dev
+
+    - name: Terraform Init - Prod
+      run: terraform init
+      working-directory: ./environments/prod
+      
+    - name: Terraform Validate - Prod
+      run: terraform validate
+      working-directory: ./environments/prod
+    
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ./environments/dev
